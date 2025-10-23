@@ -1,75 +1,53 @@
-# Smart Image Analyzer with AI-Generated Insights
+# Smart Image Analyzer — AI-generated alt text
 
-Smart Image Analyzer (Alt-Text + Vision Pipeline)
+Upload an image → get a concise, accessibility-grade alt text (one sentence, ≤25 words). Uses OpenAI Vision for human-friendly captions with an optional local TensorFlow/Keras classifier as a private hint. Results can be archived to S3 and logged to Snowflake.
 
-Upload an image → get a concise, accessibility-grade description.
-The app uses OpenAI Vision to produce one-sentence alt text (≤25 words, multilingual), with optional TensorFlow/Keras classification as a soft hint. Results can be logged to Snowflake and uploads archived to AWS S3. Includes batch/ETL utilities and (optional) a FastAPI inference service with MLflow tracking.
+## Key features
+- Streamlit UI: drag-and-drop JPG/PNG → one-sentence alt text (multilingual).  
+- Policy guardrails: exactly one sentence and ≤25 words.  
+- OpenAI Vision for natural captions.  
+- Optional TF/Keras MobileNetV2 hint (private, not shown).  
+- Optional S3 archiving: uploads/YYYY/MM/DD/... and s3:// path saved.  
+- Snowflake logging: upsert into IMAGE_RESULTS (GPT_SUMMARY + metadata).  
+- Optional: FastAPI microservice, batch inference pipeline, MLflow tracking.
 
-✨ Features
+## Tech stack
+- Python 3.10–3.11
+- OpenAI API (Vision + Chat)
+- TensorFlow/Keras, scikit-learn, OpenCV/Pillow
+- Streamlit (UI), FastAPI (optional)
+- AWS S3 (boto3), Snowflake connector, MLflow, Docker
 
-Streamlit UI (primary): drag-and-drop a JPG/PNG and receive an alt-text style summary (colors, layout, objects), suitable for screen readers and SEO.
+## Prerequisites
+- Python 3.10–3.11
+- OpenAI API key with vision access
+- (Optional) AWS S3 credentials and bucket
+- (Optional) Snowflake account
+- (Optional) Docker
 
-Policy guardrails: exactly one sentence and ≤ 25 words, in a selected language (English, Spanish, French, etc.).
+## Quick start
+1. Clone and create virtualenv:
+   python -m venv .venv
+   # Windows PowerShell:
+   .\.venv\Scripts\Activate.ps1
+   # macOS / Linux:
+   # source .venv/bin/activate
+2. Install:
+   pip install -r requirements.txt
+3. Copy and edit .env from the template below.
+4. Run Streamlit:
+   streamlit run src/utils/UI/app.py
+   (or streamlit run src/ui/app.py depending on location)
 
-OpenAI Vision integration: generates natural, human-friendly descriptions.
-
-Optional TF/Keras hint: a local MobileNetV2 classifier can provide a private label “hint” (never shown) to make captions more specific if your classes are domain-specific.
-
-Optional S3 archiving: save uploads to S3 under uploads/YYYY/MM/DD/... and store the s3:// path.
-
-Snowflake logging: upsert summaries (and predictions/metadata, if enabled) into IMAGE_RESULTS.
-
-Pipelines included:
-
-S3 → Snowflake metadata ingestor (size, MIME, sha256, width/height).
-
-Batch inference (read from Snowflake, predict, and write back).
-
-FastAPI microservice for real-time inference (if you need an API).
-
-MLflow for experiment tracking (optional).
-
-🧱 Tech Stack
-
-Languages: Python, SQL
-ML/CV: TensorFlow/Keras (MobileNetV2), scikit-learn, OpenCV/Pillow
-Generative AI: OpenAI API (Vision + Chat)
-Serving/UI: Streamlit (UI), FastAPI (optional API)
-MLOps: MLflow (optional), Docker
-Cloud/Data: AWS S3 (boto3), Snowflake (Snowflake Connector for Python, MERGE/UPSERT)
-Tooling: Jupyter, Pandas/NumPy, python-dotenv
-
-✅ Prerequisites
-
-Python 3.10–3.11
-
-OpenAI API key with access to vision models
-
-(Optional) AWS S3 bucket & credentials if you want to archive uploads
-
-(Optional) Snowflake account & warehouse if you want to log results
-
-(Optional) Docker if you want containers
-
-⚙️ Setup
-
-Clone & create venv
-python -m venv .venv
-# Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
-# macOS/Linux:
-# source .venv/bin/activate
-Install dependencies
-pip install -r requirements.txt
-Create .env from the template:
-# ==== OpenAI ====
+## .env (examples)
+# OpenAI
 OPENAI_API_KEY=sk-...
-OPENAI_SEND_IMAGE=true          # set false to avoid sending images (caption quality will be lower)
+OPENAI_SEND_IMAGE=true  # false = local-label-only captions
 
-# ==== Streamlit / optional TF hint ====
-# USE_TF_HINT=false             # set true if you trained/saved a TF model at models/tf_saved_model
+# TF hint
+# USE_TF_HINT=false     # set true if models/tf_saved_model exists
 
-# ==== Optional: Snowflake logging ====
+# Snowflake (optional)
 SNOWFLAKE_USER=...
 SNOWFLAKE_PASSWORD=...
 SNOWFLAKE_ACCOUNT=youracct-xy123
@@ -77,47 +55,25 @@ SNOWFLAKE_WAREHOUSE=IMAGE_ANALYZER_WH
 SNOWFLAKE_DATABASE=IMAGE_ANALYZER_DB
 SNOWFLAKE_SCHEMA=IMAGE_SCHEMA
 
-# ==== Optional: S3 archiving of uploads ====
+# S3 (optional)
 AWS_REGION=us-east-2
 S3_BUCKET=your-bucket
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 
-# ==== Optional: Training & MLflow ====
+# MLflow (optional)
 MLFLOW_TRACKING_URI=http://localhost:5000
 
-🚀 Run the Streamlit App
-# If your UI path is src/utils/UI/app.py
-streamlit run src/utils/UI/app.py
+## Usage
+- Upload a JPG/PNG in the Streamlit app.
+- Select language and options (S3 archive, Snowflake logging).
+- Click "Generate Description" → receives a one-sentence alt-text (≤25 words).
+- If Snowflake is enabled, the result and metadata are upserted to IMAGE_RESULTS.
 
-# If you placed it at src/ui/app.py, use:
-# streamlit run src/ui/app.py
-Use the app:
+## Security & privacy
+- If OPENAI_SEND_IMAGE=true, images are sent to OpenAI; set false to avoid sending images.  
+- Prompts avoid guessing identities, ages, or sensitive attributes.  
+- Keep secrets in .env and out of version control. Use role-based access controls for S3/Snowflake.
 
-Upload a JPG/PNG.
-
-Pick a language (e.g., English).
-
-(Optional) Check “Save upload to S3 and link in Snowflake” to archive the file and store its s3:// path.
-
-Click Generate Description → you’ll get a one-sentence, <=25-word alt-text style caption.
-
-If Snowflake is configured, a row will be upserted into IMAGE_RESULTS with GPT_SUMMARY (and S3 path if enabled).
-
-🔒 Security & Privacy
-
-OpenAI Vision: When OPENAI_SEND_IMAGE=true, images are sent to OpenAI to generate captions. If you need to avoid this, set OPENAI_SEND_IMAGE=false (captions become label-based and less descriptive), or disable the OpenAI step entirely.
-
-PII & sensitive attributes: The prompt instructs the model not to guess identities, ages, or private attributes.
-
-Secrets: Keep secrets in .env (never commit it). Use role-based access for S3/Snowflake.
-
-Data retention: With S3 archiving enabled, you control where uploads are stored and for how long.
-
-🙌 Acknowledgments
-
-Imagenette (optional sample dataset)
-
-OpenAI Vision for generative captions
-
-TensorFlow/Keras MobileNetV2 for classification hinting
+## Acknowledgments
+- OpenAI Vision, TensorFlow/Keras MobileNetV2, Imagenette (sample dataset)
