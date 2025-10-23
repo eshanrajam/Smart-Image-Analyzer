@@ -39,31 +39,6 @@ MLOps: MLflow (optional), Docker
 Cloud/Data: AWS S3 (boto3), Snowflake (Snowflake Connector for Python, MERGE/UPSERT)
 Tooling: Jupyter, Pandas/NumPy, python-dotenv
 
-📁 Repository Structure (high-level)
-.
-├─ src/
-│  ├─ utils/
-│  │  ├─ UI/
-│  │  │  └─ app.py                    # Streamlit: upload → OpenAI Vision (multilingual, ≤25 words)
-│  │  ├─ register_s3_metadata.py      # S3 → Snowflake metadata ingestor (size, MIME, sha256, WxH)
-│  │  └─ upload_to_s3.py              # Helper to bulk upload local images to S3 (optional)
-│  ├─ api/
-│  │  └─ main.py                      # FastAPI inference (optional)
-│  ├─ pipeline/
-│  │  └─ batch_infer.py               # Batch predictions + optional OpenAI summaries (optional)
-│  ├─ preprocessing/
-│  │  └─ preprocess.py                # Example preprocessing to NumPy (optional)
-│  └─ train.py                        # TF/Keras MobileNetV2 training + MLflow autolog (optional)
-├─ models/
-│  ├─ tf_saved_model/                 # Saved Keras model (if training used)
-│  ├─ label_classes.npy               # Numpy array of class names (for TF hint)
-│  └─ label_aliases.json              # Optional map: {"class_4": "Golden retriever", ...}
-├─ docker/
-│  └─ Dockerfile                      # Optional container for API/UI
-├─ requirements.txt
-├─ .env.example
-└─ README.md
-
 ✅ Prerequisites
 
 Python 3.10–3.11
